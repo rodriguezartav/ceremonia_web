@@ -1,0 +1,10 @@
+{
+	"bucket": "3vot.com",
+	"folder": "ceremonia",
+	"deploy": "WEB",
+	"notify":{
+	},
+	"apps": [
+		{"name": "app"}
+	]
+}
