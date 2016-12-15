@@ -48,18 +48,39 @@ var Home =  React.createClass({
       if( input.value == ""  || !input.value) return false;
       return true;
     }
+
+    function validateInputTelefono(input){
+      var value = input.value;
+      if( value == ""  || !value) return false;
+      value = replaceAll(value," ", "");
+      value = replaceAll(value, "-", "");
+      value = parseInt(value);
+      if( !value || value == NaN || value < 0 ) return false;
+      input.value = value;
+      return true;
+    }
+
+    function validateInputEmail(input){
+      var value = input.value;
+      if( value == ""  || !value) return false;
+      if( value.indexOf("@") == -1 ) return false;
+      if( value.indexOf(".") == -1 ) return false;
+      if(value.length < 4) return false;
+      return true;
+    }
+
     function validateDays(){
       if( !_this.state.btnDomingo && !+ _this.state.btnSabado && !_this.state.btnJueves ) return false;
       return true;
     }
-    if( parseInt(this.state.personas) > 0 && !validateInput(this.refs.txt_nombre) || !validateInput(this.refs.txt_email) || !validateInput(this.refs.txt_celular) || !validateDays() ){
-      return this.setState({reserveError: true, reserveErrorText: <div><strong>Los sentimos</strong> necesitamos que complete todos los espacios y escoja los dias que quiere participar.</div>})
+    if( parseInt(this.state.personas) > 0 && !validateInput(this.refs.txt_nombre) || !validateInputEmail(this.refs.txt_email) || !validateInputTelefono(this.refs.txt_celular) || !validateDays() ){
+      return this.setState({reserveError: true, reserveErrorText: <div><strong>Los sentimos</strong> necesitamos que revise lo siguiente:<ul><li>Todos los espacios esten completos</li><li>Haya escogido los dias que quiere ir y esten marcados en verde.</li><li>El email debe ser valido</li><li>El telefono solo debe tener numeros, sin espacios</li><li>El numero de personas debe ser un numero mayor que 0</li></ul></div>})
     }
 
     this.state.business.createRecord({
       nombre: this.refs.txt_nombre.value,
       email: this.refs.txt_email.value,
-      celular: this.refs.txt_celular.value,
+      celular: parseInt(this.refs.txt_celular.value),
       jueves: this.state.btnJueves && this.state.personas ? this.state.personas : 0 ,
       sabado: this.state.btnSabado && this.state.personas ? this.state.personas : 0,
       domingo: this.state.btnDomingo && this.state.personas ? this.state.personas : 0,
@@ -69,6 +90,7 @@ var Home =  React.createClass({
     })
     .fail( function(err){
       if( err.code == 1 ) _this.setState({reserveError: true, reserveErrorText: <div><strong>Los sentimos parece que ya existe una reservacion con estos datos.</strong> No se preocupe para resolver el problem simplemente envile un correo a Carolina con sus datos y lo que le gustaria cambiar.</div>})
+      else if(err.message && err.message.indexOf("Bad Request") ) _this.setState({reserveError: true, reserveErrorText: <div><strong>Informacion incorrecta</strong> Revise que el email y numero de telefono esten correctos</div>})
       else if(err.message) _this.setState({reserveError: true, reserveErrorText: <div>{err.message}</div> })
       else _this.setState({reserveError: true, reserveErrorText: <div>Ocurrio un error de internet. Favor intent de nuevo o envienos esta informacion: { JSON.stringify(err) }</div> })
 
@@ -228,5 +250,8 @@ var Home =  React.createClass({
 
 })
 
+function replaceAll(target, search, replacement) {
+  return target.replace(new RegExp(search, 'g'), replacement);
+}
 
 module.exports = Home;
