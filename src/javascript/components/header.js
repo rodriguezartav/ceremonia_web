@@ -1,88 +1,62 @@
 var React         = require("react");
-//var Trabajos = require("../models/trabajos");
-
-var Soldadores = require("../models/soldadores");
-var User = require("../models/user");
-var Register = require("./register");
-var ListSoldadores = require("./listSoldadores");
+var Business = require("../business");
 
 var Header =  React.createClass({
 
-  getInitialState: function(){
-    return {
-      user: User.current,
-      loginStatus: User.facebookStatus,
-      registeredStatus: User.salesforceStatus,
-      user_register_error: {},
-      soldadores: [],
-      showRegisterForm: false
-    };
+  getMessage: function(){
+    if(this.props.view == "reserve") return "Gracias por su interes en participar de la ceremonia."
+    else if(this.props.view == "confirmados") return "Aqui encontrara su celular cuando haya hecho el deposito correctamente."
+    else if(this.props.view == "reserveConfirmation") return "Lea cuidadosamente las instrucciones:"
+    else if(this.props.view == "contacto") return "Cualquier pregunta o duda con mucho gusto."
   },
 
-  componentDidMount: function(){
-    var _this = this;
-    User.on("FACEBOOK_STATUS_CHANGED", function(){
-      _this.setState({user: User.current, loginStatus: User.facebookStatus});
-    })
-
-    User.on("SALESFORCE_STATUS_CHANGED", function(){
-      _this.setState({user: User.current, registeredStatus: User.salesforceStatus});
-    })
-
-    User.on("REGISTER_ERROR", function(err){
-      _this.setState({user_register_error: err});
-    })
-
-    User.on("REGISTER_NEED_INFO", function(){
-      _this.setState({showRegisterForm: true});
-    })
-
-    Soldadores.getRecent();
-
-    Soldadores.on("REFRESH", function(soldadores){
-      _this.setState({soldadores: soldadores});
-    })
+  getHeading: function(){
+    if(this.props.view == "reserve") return "Hola!!"
+    else if(this.props.view == "confirmados") return "Lista de Confirmados"
+    else if(this.props.view == "reserveConfirmation") return "Gracias!!!"
+    else if(this.props.view == "contacto") return "Preguntas?"
   },
 
-  onLogout: function(){
-    User.logout();
-  },
-
-  onLogin: function(){
-    User.login();
-  },
-
-  onRegister: function( form_data ){
-    User.register( form_data );
-  },
-
-  renderButton: function(){
-    var isLoggedIn = this.state.loginStatus == 'connected';
-    var isRegistered = this.state.registeredStatus == 'registered'
-    if (isLoggedIn && isRegistered ) return <a href="#" className="navbar-brand" onClick={this.onLogout}>Logout</a>
-    return <a onClick={this.onLogin} href="#" className="navbar-brand">Soldador Hilco</a>
-  },
-
-  renderRegister: function(){
-    if(this.state.registeredStatus == 'registered' ) return <a>Edit</a>;
-    else if(this.state.showRegisterForm) return <Register onRegister={this.onRegister} />
-    else if(this.state.user_register_error){
-      return <div>
-        <p>{this.state.user_register_error.userMessage}</p>
-      </div>
-    }
+  onClick: function(e){
+    var type = parseInt(e.currentTarget.dataset.type);
+    if( type == 0 ) Business.instance.onChangeView("reserve")
+    else if( type == 1 ) Business.instance.onChangeView("confirmados")
+    else if( type == 2 ) Business.instance.onChangeView("contacto")
   },
 
   render: function(){
-    return <div className="navbar navbar-static-top navbar-dark bg-inverse">
-      <div className="container-fluid">
-        {this.renderButton()}
-        <button className="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbar-header" aria-controls="navbar-header" aria-expanded="false" aria-label="Toggle navigation"></button>
+    return <div className="row">
+
+    <div className="col-md-6 push-md-6">
+      <div style={{margin: 10}} className="header clearfix ">
+        <nav>
+          <ul className="nav nav-pills float-xs-right">
+            <li className="nav-item">
+              <a data-type="0" onClick={this.onClick} className={ "nav-link " + ( this.props.view == "reserve" ? "active" : "" ) } href="#">Reserve <span className="sr-only">(current)</span></a>
+            </li>
+            <li className="nav-item">
+              <a data-type="1" onClick={this.onClick} className={ "nav-link " + ( this.props.view == "confirmados" ? "active" : "") } href="#">Confirmados</a>
+            </li>
+            <li className="nav-item">
+              <a data-type="2" onClick={this.onClick} className={ "nav-link " + ( this.props.view == "contacto" ? "active" : "") } href="#">Preguntas?</a>
+            </li>
+          </ul>
+        </nav>
       </div>
     </div>
-  },
 
-})
 
+      <div className="col-md-6 pull-md-6">
+        <div className="" style={{paddingBottom: 0, paddingTop: 20}}>
+          <h1 className="display-3">{this.getHeading()}</h1>
+          <p className="lead">{this.getMessage()}</p>
+          <hr className="my-2"/>
+        </div>
+      </div>
+
+
+    </div>
+  }
+});
 
 module.exports = Header;
